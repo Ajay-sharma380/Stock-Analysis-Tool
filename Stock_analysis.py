@@ -25,12 +25,12 @@ if data.empty:
     st.error("No data found. Please check the ticker symbol or date range.")
     st.stop()
 
-# 🔧 FIX 1: Flatten columns if needed
+#  FIX 1: multiindex columns ko single level columns me convert karta h agar jarurat ho 
 if isinstance(data.columns, pd.MultiIndex):
     data.columns = data.columns.get_level_values(0)
 
-# 🔧 FIX 2: Safe column selection
-if "Close" in data.columns:
+#  FIX 2: check karta h kon sa column available h dataset me close ya adjusted
+if "Close" in data.columns: 
     price_col = "Close"
 elif "Adj Close" in data.columns:
     price_col = "Adj Close"
@@ -39,7 +39,7 @@ else:
     st.stop()
 volume_col = "Volume" if "Volume" in data.columns else None
 
-# 🔧 FIX 3: Clean data safely
+# FIX 3:  Data ko safely clean karne ke liye 
 data = data.dropna(subset=[price_col])
 if volume_col:
     data = data.dropna(subset=[volume_col])
@@ -47,17 +47,17 @@ if volume_col:
 # Moving Average
 data["MA"] = data[price_col].rolling(ma_window).mean()
 
-# Initialize Tabs
+# Tabs
 tabs = st.tabs(["📋Raw Data","📈 Price Chart","📊 Volume Chart","📉 Moving Avg", "💵 Payouts", "🧾 Stock Summary", "📰 News"
 ])
 
-# Tab 1: Raw Data
+# Tab 1: Raw Data Ki Last 5 Rows 
 with tabs[0]:
     st.subheader(f"Raw Data for {ticker_name}")
     st.write(data.tail())
     st.download_button("Download Data as CSV", data.to_csv(), file_name=f"{ticker_name}_data.csv")
 
-# Tab 2: Closing Price Chart
+# Tab 2: Closing Price Chart Ke Liye 
 with tabs[1]:
     if price_col:
         st.subheader("Closing Price Over Time")
@@ -65,7 +65,7 @@ with tabs[1]:
     else:
         st.warning("Closing price data is not available for this stock.")
 
-# Tab 3: Volume Chart
+# Tab 3: Volume Chart Ke Liye Or Volume Crores Me Dikhe 
 with tabs[2]:
     if volume_col:
         st.subheader("Volume Over Time (in Crores)")
@@ -79,7 +79,7 @@ with tabs[2]:
         st.warning("Volume data is not available for this stock.")
 
         
-# Tab 4: Moving Averages
+# Tab 4: Moving Averages Chart Ke Liye 
 with tabs[3]:
     st.subheader(f"Closing Price with {ma_window}-Day Moving Average")
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -93,7 +93,7 @@ with tabs[3]:
 
 
 
-# Tab 5: Dividends & Splits
+# Tab 5: Dividends & Splits Ke liye
 with tabs[4]:
     st.subheader("Dividends & Splits")
     ticker = yf.Ticker(ticker_name)
@@ -127,12 +127,11 @@ with tabs[5]:
 
     st.dataframe(summary, use_container_width=True, hide_index=True)
 
-# 📰 Tab: Stock News
+# Tab: Stock News
 with tabs[6]:
     st.subheader("Latest News")
 
     try:
-        # Yahoo Finance RSS (works 100%)
         rss_url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker_name}&region=US&lang=en-US"
         feed = feedparser.parse(rss_url)
 
@@ -146,3 +145,4 @@ with tabs[6]:
 
     except Exception as e:
         st.warning("Unable to fetch news at the moment.")
+
